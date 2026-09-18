@@ -18,3 +18,4 @@ Data quality is the unsexy, career-defining skill. A pipeline that runs successf
 
 **Orchestrating Multi-Tool Pipelines** — In production, your pipeline isn't "run dbt." It's "extract from Postgres, load to BigQuery, run transformations, run tests, alert on failure." Dagster orchestrates this entire chain as a single observable workflow.
 
+📄 [View lesson 2.7 interactive page](https://su-ntu-ctp.github.io/5m-data-2.7-data-orchestration-testing/)

@@ -4,12 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Testing Guide - Great Expectations & DBT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🔍 Data Testing Guide</h1>
+            <p class="programme-label">NTU SCTP · Data Orchestration & Testing</p>
+            <h1>🔍 Data <strong>Testing</strong> Guide</h1>
             <p class="subtitle">Master data quality with Great Expectations & DBT Testing</p>
         </header>
 
@@ -26,9 +29,57 @@
             <section class="card">
                 <h2>📚 What is Data Testing?</h2>
                 <p>Data testing is an important part of data quality management. It verifies that data satisfies expected properties.</p>
+                <div class="beginner-box">
+                    <span class="beginner-label">🧠 In Plain English</span>
+                    <p>Think of a factory quality inspector checking products before they leave the line. Data testing does the same job for your data: before (or after) it moves through your pipeline, you check it against a set of rules — "no missing values," "dates must be real dates," "prices can't be negative" — and reject or flag anything that fails.</p>
+                    <p>You never fully trust data just because it "loaded successfully." Loading without errors only means the file was readable — it says nothing about whether the numbers inside make sense.</p>
+                </div>
                 <div class="info-box">
                     <p><strong>Also known as:</strong> Data validation, data quality assurance, data quality control, data quality assessment</p>
                 </div>
+            </section>
+
+            <section class="card">
+                <h2>🧩 Glossary — Terms You'll See in This Lesson</h2>
+                <p>No prior data engineering knowledge assumed. Skim these once, then refer back whenever a term feels unfamiliar.</p>
+                <dl class="glossary-grid">
+                    <div class="glossary-term">
+                        <dt>Pipeline</dt>
+                        <dd>The series of automated steps that moves data from a source (e.g. a CSV file, an API) into a place where it can be analysed, transforming it along the way.</dd>
+                    </div>
+                    <div class="glossary-term">
+                        <dt>ETL / ELT</dt>
+                        <dd>Extract, Transform/Load, Load/Transform — the order in which you pull data out, reshape it, and store it. Modern warehouses usually load raw data first, then transform it (ELT).</dd>
+                    </div>
+                    <div class="glossary-term">
+                        <dt>Data Warehouse</dt>
+                        <dd>A database built for analysis rather than day-to-day transactions — where your cleaned, testable data ends up living (e.g. BigQuery, Snowflake).</dd>
+                    </div>
+                    <div class="glossary-term">
+                        <dt>Schema</dt>
+                        <dd>The "shape" of your data: which columns exist, what data type each one is (text, number, date), and how tables relate to each other.</dd>
+                    </div>
+                    <div class="glossary-term">
+                        <dt>Expectation / Assertion</dt>
+                        <dd>A single rule you expect your data to follow, e.g. "column age is always between 0 and 120." The core building block in Great Expectations.</dd>
+                    </div>
+                    <div class="glossary-term">
+                        <dt>Test</dt>
+                        <dd>DBT's word for the same idea — a check that either passes or fails against your data. A dbt test is really just an expectation written as SQL.</dd>
+                    </div>
+                    <div class="glossary-term">
+                        <dt>Model (dbt)</dt>
+                        <dd>A saved SQL query that dbt turns into a table or view in your warehouse — the "transform" step of your pipeline.</dd>
+                    </div>
+                    <div class="glossary-term">
+                        <dt>Orchestration</dt>
+                        <dd>Automatically running your pipeline's steps in the right order, on a schedule, and alerting you when something breaks — instead of running scripts by hand.</dd>
+                    </div>
+                    <div class="glossary-term">
+                        <dt>DAG</dt>
+                        <dd>"Directed Acyclic Graph" — a fancy name for a flowchart of tasks where each task points to the ones that must run after it, with no loops.</dd>
+                    </div>
+                </dl>
             </section>
 
             <section class="card">
@@ -113,10 +164,19 @@ from great_expectations import expectations as gxe</code></pre>
 
             <section class="card">
                 <h2>📋 Core Concepts</h2>
-                
+                <div class="beginner-box">
+                    <span class="beginner-label">🧠 In Plain English</span>
+                    <p>Great Expectations organises everything around one question: <strong>"where is my data, and what rules should it follow?"</strong> The four concepts below build on each other like nested boxes:</p>
+                    <p><strong>Data Context</strong> (the project folder) → <strong>Data Source</strong> (the address of your data) → <strong>Data Asset</strong> (a named table/file within that address) → <strong>Batch Definition</strong> (exactly which slice of that asset you want to check right now).</p>
+                </div>
+
                 <div class="concept-card">
                     <h3>1. Data Context</h3>
                     <p>Defines storage location for metadata, configurations, and validation results</p>
+                    <div class="beginner-box">
+                        <span class="beginner-label">🧠 In Plain English</span>
+                        <p>The Data Context is your GX "project folder" — it remembers every Data Source, rule, and past test result so you don't have to redeclare them each time.</p>
+                    </div>
                     <div class="hint-box">💡 All GX scripts start with creating a Data Context</div>
                     <pre><code class="language-python">context = gx.get_context()</code></pre>
                 </div>
@@ -124,6 +184,10 @@ from great_expectations import expectations as gxe</code></pre>
                 <div class="concept-card">
                     <h3>2. Data Sources</h3>
                     <p>Tell GX where your data is located and how to connect to it</p>
+                    <div class="beginner-box">
+                        <span class="beginner-label">🧠 In Plain English</span>
+                        <p>A Data Source is just an address — "my CSV files live in this folder" or "my tables live in this database." GX needs this address before it can read anything.</p>
+                    </div>
                     <div class="supported-sources">
                         <span class="source-tag">Amazon S3</span>
                         <span class="source-tag">Azure Blob</span>
@@ -142,6 +206,10 @@ data_source = context.data_sources.add_pandas_filesystem(
                 <div class="concept-card">
                     <h3>3. Data Assets</h3>
                     <p>A collection of related records within a Data Source</p>
+                    <div class="beginner-box">
+                        <span class="beginner-label">🧠 In Plain English</span>
+                        <p>If the Data Source is the folder's address, the Data Asset is the specific file or table you actually care about inside it — e.g. "the CSV files that hold resale flat prices."</p>
+                    </div>
                     <pre><code class="language-python">asset_name = "resale_csv_files"
 file_csv_asset = data_source.add_csv_asset(name=asset_name)</code></pre>
                 </div>
@@ -149,6 +217,10 @@ file_csv_asset = data_source.add_csv_asset(name=asset_name)</code></pre>
                 <div class="concept-card">
                     <h3>4. Batch Definition</h3>
                     <p>Request all records or a subset from a Data Asset</p>
+                    <div class="beginner-box">
+                        <span class="beginner-label">🧠 In Plain English</span>
+                        <p>A Batch Definition says "when I run a test, grab <em>this</em> slice of the asset" — one file, one date range, or the whole thing. The actual data you get back is called a <strong>Batch</strong>.</p>
+                    </div>
                     <pre><code class="language-python">batch_definition = file_data_asset.add_batch_definition_path(
     name="resale_flat_201701_202306.csv",
     path="resale_flat_201701_202306.csv"
@@ -160,7 +232,11 @@ batch = batch_definition.get_batch()</code></pre>
 
             <section class="card">
                 <h2>✅ Creating Expectations</h2>
-                
+                <div class="beginner-box">
+                    <span class="beginner-label">🧠 In Plain English</span>
+                    <p>An <strong>Expectation</strong> is one rule ("this column's max value should be under 2020"). A <strong>Suite</strong> is a checklist that bundles several rules together. A <strong>Validation Definition</strong> pairs that checklist with a specific Batch of data and remembers the pairing so you can re-run it anytime. Running it produces <strong>Validation Results</strong> — the report card telling you which rules passed or failed.</p>
+                </div>
+
                 <div class="expectations-demo">
                     <h3>Single Expectation</h3>
                     <pre><code class="language-python">preset_expectation = gx.expectations.ExpectColumnMaxToBeBetween(
@@ -250,6 +326,15 @@ validation_results = batch.validate(expectation)</code></pre>
                 </div>
             </section>
 
+            <section class="card">
+                <h2>🚦 Checkpoints</h2>
+                <p>A Checkpoint executes one or more Validation Definitions and then performs a set of Actions based on the results — the piece that automates the "run this and alert on failure" step in a real pipeline.</p>
+                <div class="beginner-box">
+                    <span class="beginner-label">🧠 In Plain English</span>
+                    <p>Everything above (Context → Source → Asset → Batch → Expectation → Suite → Validation Definition) is the setup. A Checkpoint is the "run button" you'd actually schedule in production — it runs your Validation Definition(s) and can trigger an action (e.g. send a Slack alert) when data fails.</p>
+                </div>
+            </section>
+
             <section class="card resource-card">
                 <h2>📖 Additional Resources</h2>
                 <ul class="resource-list">
@@ -265,11 +350,19 @@ validation_results = batch.validate(expectation)</code></pre>
             <section class="card">
                 <h2>🚀 DBT Testing Setup</h2>
                 <p>DBT provides built-in tests and can be extended with powerful testing packages</p>
+                <div class="beginner-box">
+                    <span class="beginner-label">🧠 In Plain English</span>
+                    <p>dbt ("data build tool") lets you write your transformations as plain SQL <code>SELECT</code> statements, and it handles running them in the right order inside your warehouse. Because your transformations are just SQL, dbt can also run SQL-based <strong>tests</strong> against the results — the same idea as a GX Expectation, just written as a query that should return zero bad rows instead of a Python rule.</p>
+                </div>
             </section>
 
             <section class="card">
                 <h2>📦 Installing dbt_utils</h2>
-                
+                <div class="beginner-box">
+                    <span class="beginner-label">🧠 In Plain English</span>
+                    <p>dbt only ships four basic tests out of the box. Packages like <code>dbt_utils</code> are community-built add-ons (think: browser extensions) that give you many more ready-made test types, so you don't have to hand-write complex SQL yourself.</p>
+                </div>
+
                 <div class="collapsible-section">
                     <button class="collapsible-btn">
                         <span>Step 1: Create packages.yml</span>
@@ -278,7 +371,7 @@ validation_results = batch.validate(expectation)</code></pre>
                     <div class="collapsible-content">
                         <pre><code class="language-yaml">packages:
   - package: dbt-labs/dbt_utils
-    version: 1.3.0</code></pre>
+    version: 1.3.3</code></pre>
                         <p class="code-explanation">Create this file in your DBT project root directory</p>
                     </div>
                 </div>
@@ -304,9 +397,15 @@ validation_results = batch.validate(expectation)</code></pre>
                     <pre><code class="language-yaml">- name: date
   tests:
     - dbt_utils.accepted_range:
-        min_value: "PARSE_DATE('%F', '2012-01-01')"
-        max_value: "CURRENT_DATE()"</code></pre>
+        arguments:
+          min_value: "PARSE_DATE('%F', '2012-01-01')"
+          max_value: "CURRENT_DATE()"</code></pre>
                     <div class="hint-box">💡 Great for validating date ranges or numeric boundaries</div>
+                    <div class="code-explanation">dbt-core 1.10+ requires test arguments to be nested under an <code>arguments:</code> key — the test still fails/is skipped silently on older syntax.</div>
+                    <div class="beginner-box">
+                        <span class="beginner-label">🧠 Try It Yourself</span>
+                        <p>In <code>models/star/schema.yml</code>, the <code>pack</code> and <code>bottle_volume_ml</code> columns use this same test with <code>min_value</code>/<code>max_value</code> left as placeholders. Run a SQL query to find the real min/max for each column, then fill them in — that's the exercise.</p>
+                    </div>
                 </div>
 
                 <div class="test-example">
@@ -314,14 +413,20 @@ validation_results = batch.validate(expectation)</code></pre>
                     <p>Validate complex business logic across multiple columns</p>
                     <pre><code class="language-yaml">tests:
   - dbt_utils.expression_is_true:
-      expression: "ROUND(sale_dollars, 1) = TRUNC(bottles_sold * state_bottle_retail, 1)"</code></pre>
+      arguments:
+        expression: "ROUND(sale_dollars, 1) = TRUNC(bottles_sold * state_bottle_retail, 1)"
+        severity: error # accepts only `error` and `warn`, default is error</code></pre>
                     <div class="hint-box">💡 This is a model-level test - place it outside the columns section</div>
                 </div>
             </section>
 
             <section class="card">
                 <h2>📦 Installing dbt-expectations</h2>
-                
+                <div class="beginner-box">
+                    <span class="beginner-label">🧠 In Plain English</span>
+                    <p><code>dbt-expectations</code> is another add-on package, this time inspired directly by Great Expectations — it ports many of GX's statistical and pattern-matching rules into dbt's SQL-test world, so both tools end up speaking a similar "rules" vocabulary.</p>
+                </div>
+
                 <div class="collapsible-section">
                     <button class="collapsible-btn">
                         <span>Update packages.yml</span>
@@ -330,9 +435,9 @@ validation_results = batch.validate(expectation)</code></pre>
                     <div class="collapsible-content">
                         <pre><code class="language-yaml">packages:
   - package: dbt-labs/dbt_utils
-    version: 1.3.0
+    version: 1.3.3
   - package: metaplane/dbt_expectations
-    version: 0.10.9</code></pre>
+    version: 0.10.10</code></pre>
                         <p class="code-explanation">Add dbt-expectations to your packages file</p>
                         <pre><code class="language-bash">dbt deps</code></pre>
                     </div>
@@ -348,12 +453,14 @@ validation_results = batch.validate(expectation)</code></pre>
                     <pre><code class="language-yaml">- name: invoice_and_item_number
   tests:
     - dbt_expectations.expect_column_values_to_be_of_type:
-        column_type: string
+        arguments:
+          column_type: string
 
 - name: date
   tests:
     - dbt_expectations.expect_column_values_to_be_of_type:
-        column_type: date</code></pre>
+        arguments:
+          column_type: date</code></pre>
                     <div class="hint-box">💡 Add type tests for all critical columns to catch schema changes early</div>
                 </div>
             </section>
@@ -437,6 +544,10 @@ validation_results = batch.validate(expectation)</code></pre>
             <section class="card">
                 <h2>⚙️ Orchestration with Dagster</h2>
                 <p>Automate and schedule your data testing workflows with orchestration tools</p>
+                <div class="beginner-box">
+                    <span class="beginner-label">🧠 In Plain English</span>
+                    <p>Imagine baking a cake: you must mix the batter before baking, and bake before icing — running steps out of order ruins the cake. An <strong>orchestrator</strong> like Dagster is the recipe manager for your data pipeline. It knows which step depends on which, runs them in the correct order automatically on a schedule (e.g. every night at midnight), and tells you the moment a step fails — instead of you running scripts by hand and hoping nothing broke.</p>
+                </div>
             </section>
 
             <section class="card">
@@ -444,87 +555,106 @@ validation_results = batch.validate(expectation)</code></pre>
                 <div class="info-box">
                     <p>Orchestration allows you to automate your data pipelines, schedule testing workflows, manage dependencies, and monitor data quality continuously in production environments.</p>
                 </div>
+                <div class="beginner-box">
+                    <span class="beginner-label">🧠 In Plain English</span>
+                    <p>A <strong>job</strong> is one runnable pipeline (a group of steps). An <strong>op</strong> is a single step inside that job (e.g. "extract," "validate," "transform"). A <strong>schedule</strong> tells Dagster when to run the job automatically, using the same cron syntax you'd see in any Unix scheduler (e.g. <code>0 0 * * *</code> = every day at midnight).</p>
+                </div>
             </section>
 
             <section class="card">
                 <h2>📦 Dagster for Data Testing</h2>
-                <div class="hint-box">💡 Dagster provides powerful capabilities for orchestrating both Meltano and DBT pipelines with built-in testing support</div>
-                
+                <div class="hint-box">💡 Dagster orchestrates Meltano and DBT as ordinary CLI commands, wrapped as Dagster assets via Pipes for full logging and observability</div>
+                <div class="beginner-box">
+                    <span class="beginner-label">🧠 In Plain English</span>
+                    <p>Dagster doesn't need a special "Meltano plugin" — <code>PipesSubprocessClient</code> just runs any shell command (<code>meltano run ...</code>, <code>dbt build</code>) as a step in your pipeline, and streams its logs back into the Dagster UI. <code>@asset(deps=[...])</code> is how you say "this step only runs after that one finishes."</p>
+                </div>
+
                 <div class="orchestration-example">
-                    <h3>Sample Dagster Configuration</h3>
-                    <pre><code class="language-python">from dagster import Definitions, ScheduleDefinition, job
-from dagster_meltano import meltano_resource, meltano_run_op
+                    <h3>Sample Dagster Configuration — assets.py</h3>
+                    <pre><code class="language-python"># assets.py
+from dagster import asset, AssetExecutionContext, PipesSubprocessClient
 
-@job(resource_defs={"meltano": meltano_resource})
-def run_elt_job():
-    tap_done = meltano_run_op("tap-github target-bigquery")()
+@asset
+def pipeline_meltano(context: AssetExecutionContext, pipes_subprocess_client: PipesSubprocessClient):
+    """Runs meltano using Dagster Pipes for better logging and observability."""
+    return pipes_subprocess_client.run(
+        command=["meltano", "run", "tap-postgres", "target-bigquery"],
+        context=context,
+        cwd="/path/to/your/folder/meltano_resale_in_lesson_2_6"
+    ).get_results()
 
-# Schedule to run daily at midnight
-elt_schedule = ScheduleDefinition(
-    job=run_elt_job,
-    cron_schedule="0 0 * * *",
-)
-
-defs = Definitions(
-    jobs=[run_elt_job],
-    schedules=[elt_schedule],
-)</code></pre>
+@asset(deps=[pipeline_meltano])
+def pipeline_dbt_run(context: AssetExecutionContext, pipes_subprocess_client: PipesSubprocessClient):
+    """Runs dbt build using Dagster Pipes."""
+    return pipes_subprocess_client.run(
+        command=["dbt", "build"],
+        context=context,
+        cwd="/path/to/your/folder/resale_flat_in_lesson_2_6"
+    ).get_results()</code></pre>
+                    <p class="code-explanation">From <code>meltano-orchestration/meltano_orchestration/assets.py</code> — swap the <code>cwd</code> paths for your own Meltano and dbt project folders from Unit 2.6.</p>
                 </div>
             </section>
 
             <section class="card">
                 <h2>🔄 Orchestrated Testing Workflow</h2>
-                
+                <p>This is exactly how <code>extra/dagster_orchestration_dbt</code> wires up its <code>dbt_pipeline</code> job — three assets chained with <code>deps=[...]</code>, each shelling out to one dbt command.</p>
+                <div class="beginner-box">
+                    <span class="beginner-label">🧠 In Plain English</span>
+                    <p><code>deps=[pipeline_dbt_seed]</code> is Dagster's way of saying "don't start this step until that one succeeds." Chain three assets like this and you get seed → run → test running in strict order, automatically, with each step's pass/fail visible in the Dagster UI.</p>
+                </div>
+
                 <div class="workflow-steps">
                     <div class="workflow-step">
                         <div class="step-number">1</div>
                         <div class="step-content">
-                            <h4>Schedule Data Ingestion</h4>
-                            <pre><code class="language-python">@job
-def ingest_data():
-    # Run Meltano tap to extract data
-    meltano_run_op("tap-source target-warehouse")()</code></pre>
-                            <p>Extract data from source systems on a schedule</p>
+                            <h4>Seed Reference Data</h4>
+                            <pre><code class="language-python">@asset
+def pipeline_dbt_seed() -> None:
+    """Runs dbt seed"""
+    cmd = ["dbt", "seed"]
+    output = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode()</code></pre>
+                            <p>Load static seed CSVs into the warehouse first</p>
                         </div>
                     </div>
 
                     <div class="workflow-step">
                         <div class="step-number">2</div>
                         <div class="step-content">
-                            <h4>Validate Raw Data with GX</h4>
-                            <pre><code class="language-python">@op
-def validate_raw_data():
-    # Run Great Expectations validation
-    context = gx.get_context()
-    results = validation_definition.run()
-    return results</code></pre>
-                            <p>Validate raw data quality before transformation</p>
+                            <h4>Run DBT Transformations</h4>
+                            <pre><code class="language-python">@asset(deps=[pipeline_dbt_seed])
+def pipeline_dbt_run() -> None:
+    """Runs dbt run"""
+    cmd = ["dbt", "run"]
+    output = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode()</code></pre>
+                            <p>Transform data using dbt models — only after seeding succeeds</p>
                         </div>
                     </div>
 
                     <div class="workflow-step">
                         <div class="step-number">3</div>
                         <div class="step-content">
-                            <h4>Run DBT Transformations</h4>
-                            <pre><code class="language-bash">dbt run</code></pre>
-                            <p>Transform data using DBT models</p>
+                            <h4>Execute DBT Tests</h4>
+                            <pre><code class="language-python">@asset(deps=[pipeline_dbt_run])
+def pipeline_dbt_test() -> None:
+    """Runs dbt test"""
+    cmd = ["dbt", "test"]
+    output = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode()</code></pre>
+                            <p>Run all dbt tests to validate the transformations — only after the run succeeds</p>
                         </div>
                     </div>
 
                     <div class="workflow-step">
                         <div class="step-number">4</div>
                         <div class="step-content">
-                            <h4>Execute DBT Tests</h4>
-                            <pre><code class="language-bash">dbt test</code></pre>
-                            <p>Run all DBT tests to validate transformations</p>
-                        </div>
-                    </div>
-
-                    <div class="workflow-step">
-                        <div class="step-number">5</div>
-                        <div class="step-content">
-                            <h4>Monitor & Alert</h4>
-                            <p>Track test results and send alerts on failures</p>
+                            <h4>Group Into a Job & Schedule</h4>
+                            <pre><code class="language-python">dbt_pipeline_job = define_asset_job(
+    name="dbt_pipeline",
+    selection=["pipeline_dbt_seed", "pipeline_dbt_run", "pipeline_dbt_test"]
+)
+dbt_pipeline_schedule = ScheduleDefinition(
+    job=dbt_pipeline_job, cron_schedule="0 0 * * *"  # every day at midnight
+)</code></pre>
+                            <p>Bundle the three assets into a job, and the job's run history is where you monitor pass/fail and set up alerts</p>
                         </div>
                     </div>
                 </div>
@@ -532,32 +662,55 @@ def validate_raw_data():
 
             <section class="card">
                 <h2>📊 Dagster Configuration Example</h2>
-                
+                <div class="beginner-box">
+                    <span class="beginner-label">🧠 In Plain English</span>
+                    <p>When a whole dbt project should become Dagster assets automatically (one asset per model, with dbt's own dependency graph carried over), scaffold it with <code>dagster-dbt project scaffold</code> instead of hand-writing each asset — that's what <code>resale_flat_dagster</code> is.</p>
+                </div>
+
                 <div class="collapsible-section">
                     <button class="collapsible-btn">
-                        <span>Complete Dagster Project Setup</span>
+                        <span>Complete Dagster Project Setup — definitions.py</span>
                         <span class="arrow">▼</span>
                     </button>
                     <div class="collapsible-content">
-                        <pre><code class="language-python">from dagster import Definitions, ScheduleDefinition, job
-from dagster_dbt import dbt_cli_resource, dbt_run_op, dbt_test_op
-
-@job(resource_defs={"dbt": dbt_cli_resource})
-def dbt_pipeline():
-    dbt_run = dbt_run_op()
-    dbt_test_op(start_after=dbt_run)
-
-# Schedule to run daily
-dbt_schedule = ScheduleDefinition(
-    job=dbt_pipeline,
-    cron_schedule="0 2 * * *",  # 2 AM daily
-)
+                        <pre><code class="language-python">from dagster import Definitions
+from dagster_dbt import DbtCliResource
+from .assets import resale_flat_dbt_assets
+from .project import resale_flat_project
+from .schedules import schedules, jobs
 
 defs = Definitions(
-    jobs=[dbt_pipeline],
-    schedules=[dbt_schedule],
+    assets=[resale_flat_dbt_assets],
+    schedules=schedules,
+    jobs=jobs,
+    resources={
+        "dbt": DbtCliResource(project_dir=resale_flat_project),
+    },
 )</code></pre>
-                        <p class="code-explanation">This sets up a complete DBT pipeline with automated testing that runs daily at 2 AM</p>
+                        <p class="code-explanation">From <code>resale_flat_dagster/resale_flat_dagster/definitions.py</code> — <code>resale_flat_dbt_assets</code> is auto-generated by the scaffold, one Dagster asset per dbt model.</p>
+                    </div>
+                </div>
+
+                <div class="collapsible-section">
+                    <button class="collapsible-btn">
+                        <span>Scheduling — schedules.py</span>
+                        <span class="arrow">▼</span>
+                    </button>
+                    <div class="collapsible-content">
+                        <pre><code class="language-python">from dagster_dbt import build_schedule_from_dbt_selection
+from .assets import resale_flat_dbt_assets
+
+materialize_dbt_job_schedule = build_schedule_from_dbt_selection(
+    [resale_flat_dbt_assets],
+    job_name="materialize_dbt_models",
+    cron_schedule="0 0 * * *",
+    dbt_select="fqn:*",
+)
+
+materialize_dbt_job = materialize_dbt_job_schedule.job
+schedules = [materialize_dbt_job_schedule]
+jobs = [materialize_dbt_job]</code></pre>
+                        <p class="code-explanation">From <code>resale_flat_dagster/resale_flat_dagster/schedules.py</code> — <code>build_schedule_from_dbt_selection</code> turns dbt's own model selection syntax straight into a Dagster schedule.</p>
                     </div>
                 </div>
 
@@ -567,8 +720,8 @@ defs = Definitions(
                         <span class="arrow">▼</span>
                     </button>
                     <div class="collapsible-content">
-                        <pre><code class="language-bash">dagster dev</code></pre>
-                        <p class="code-explanation">Start the Dagster UI to monitor and trigger jobs manually</p>
+                        <pre><code class="language-bash">DAGSTER_DBT_PARSE_PROJECT_ON_LOAD=1 dagster dev</code></pre>
+                        <p class="code-explanation">The env var tells Dagster to re-parse the dbt project on load, so newly added/changed dbt models show up as assets. Then use <code>Materialize all</code> under Lineage to trigger the dbt pipeline, and toggle the schedule on to run it automatically.</p>
                     </div>
                 </div>
             </section>
@@ -620,7 +773,7 @@ defs = Definitions(
                 <ul class="resource-list">
                     <li><a href="https://docs.dagster.io/" target="_blank">Dagster Documentation</a></li>
                     <li><a href="https://docs.dagster.io/integrations/dbt" target="_blank">Dagster DBT Integration</a></li>
-                    <li><a href="https://docs.dagster.io/integrations/meltano" target="_blank">Dagster Meltano Integration</a></li>
+                    <li><a href="https://docs.dagster.io/guides/build/external-pipelines/subprocess-pipeline" target="_blank">Dagster Pipes — Subprocess (used to run Meltano)</a></li>
                 </ul>
             </section>
         </div>
@@ -630,6 +783,10 @@ defs = Definitions(
             <section class="card">
                 <h2>🔄 Complete Data Testing Workflow</h2>
                 <p>Integrate both Great Expectations and DBT into your data pipeline</p>
+                <div class="beginner-box">
+                    <span class="beginner-label">🧠 In Plain English</span>
+                    <p>Neither tool replaces the other — they check different moments in the pipeline. GX is your gatekeeper at the front door: it checks raw, messy data the moment it arrives, before you trust it enough to transform. dbt tests are your gatekeeper at the back door: once dbt has transformed that raw data into clean tables, its tests confirm the transformation logic itself didn't introduce mistakes.</p>
+                </div>
             </section>
 
             <section class="card">

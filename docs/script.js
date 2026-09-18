@@ -261,7 +261,7 @@ document.addEventListener('DOMContentLoaded', function() {
         top: 0;
         left: 0;
         height: 4px;
-        background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+        background: var(--ntu-crimson);
         width: 0%;
         z-index: 9999;
         transition: width 0.1s ease;
